@@ -1,168 +1,231 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <ctype.h>
 #include "hashmap.h"
+#include <stdlib.h>
+#include <assert.h>
 
-typedef struct Pair Pair;
-typedef struct HashMap HashMap;
-int enlarge_called=0;
+typedef struct Node Node;
 
-struct Pair {
-     char * key;
-     void * value;
+struct Node {
+    void * key;
+    /*! Puntero al dato */
+    void * data;
+
+    /*! Puntero al siguiente nodo */
+    Node * next;
+
+    /*! Puntero al anterior nodo */
+    Node * prev;
 };
 
-struct HashMap {
-    Pair ** buckets;
-    long size; //cantidad de datos/pairs en la tabla
-    long capacity; //capacidad de la tabla
-    long current; //indice del ultimo dato accedido
-};
+Node* _createNode(void * key, void * data) {
+    Node  * new = (Node *)malloc(sizeof(Node));
 
-Pair * createPair( char * key,  void * value) {
-    Pair * new = (Pair *)malloc(sizeof(Pair));
+    assert(new != NULL);
+
     new->key = key;
-    new->value = value;
+    new->data = data;
+    new->prev = NULL;
+    new->next = NULL;
     return new;
 }
 
-long hash( char * key, long capacity) {
-    unsigned long hash = 0;
-     char * ptr;
-    for (ptr = key; *ptr != '\0'; ptr++) {
-        hash += hash*32 + tolower(*ptr);
+struct Map {
+    /*! Puntero al incio (cabeza) de la lista */
+    Node * head;
+
+    /*! Puntero al final (cola) de la lista */
+    Node * tail;
+
+    /*! Punteor para poder recorrer la lista */
+    Node * current;
+
+    int (*is_equal)(void* key1, void* key2);
+    int (*lower_than)(void* key1, void* key2);
+
+};
+
+
+Map * createMap(int (*is_equal)(void* key1, void* key2)) {
+    Map * new = (Map *)malloc(sizeof(Map));
+    assert(new != NULL); // No hay memoria para reservar la Mapa.
+    new->head = new->tail = new->current = NULL;
+    new->is_equal = is_equal;
+    new->lower_than = NULL;
+    return new;
+}
+
+void setSortFunction(Map* map, int (*lower_than)(void* key1, void* key2)){
+    map->lower_than = lower_than;
+}
+
+void * firstMap(Map * list) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    if (list->head == NULL) return NULL;
+
+    list->current = list->head;
+
+    return (void *)list->current->data;
+}
+
+void * nextMap(Map * list) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    if (list->head == NULL || list->current == NULL || list->current->next == NULL) return NULL;
+
+    list->current = list->current->next;
+
+    return (void *)list->current->data;
+}
+
+void _pushFront(Map * list, void * key, void * value) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    Node * new = _createNode(key, value);
+
+    if (list->head == NULL) {
+        list->tail = new;
+    } else {
+        new->next = list->head;
+        list->head->prev = new;
     }
-    return hash%capacity;
-}
 
-int is_equal(void* key1, void* key2){
-    if(key1==NULL || key2==NULL) return 0;
-    if(strcmp((char*)key1,(char*)key2) == 0) return 1;
-    return 0;
+    list->head = new;
 }
 
 
-void insertMap(HashMap * map, char * key, void * value) {
+void insertMap(Map * list, void * key, void * value){
 
-int posicion;
+    assert(list != NULL); // list no puede ser NULL.
 
-posicion = hash(key,map->capacity);
-Pair* par_nuevo = createPair(key,value);
+    Node* aux= list->head;
 
-if(map->size >= map->capacity * 0.7){// se arreglan las colisiones
-  map = (HashMap*)realloc(map,sizeof(HashMap)*2);
-  map->capacity *= 2;
-}
-
-while(map->buckets[posicion]!=NULL){//se evalua las siguientes posiciones para agregar algun dato repetido
-  posicion++;
-  if(posicion == map->capacity){
-   posicion=0; 
-  }
-}
-
-map->buckets[posicion] = par_nuevo;
-map->size++;
-
-}
-
-void enlarge(HashMap * map) {
-    enlarge_called = 1; //no borrar (testing purposes)
-
-
-}
-
-
-HashMap * createMap(long capacity) {
-
-  HashMap* map = (HashMap*)malloc(sizeof(HashMap));
-
-  map->current = -1;
-  map->size = 0;
-  map->capacity = capacity;
-
-  map->buckets = (Pair**)calloc(capacity,sizeof(Pair*));
-  for(int i=0;i<capacity;i++){
-    map->buckets[i] = NULL;
-  }
-
-  return map;
-}
-
-void eraseMap(HashMap * map,  char * key) {    
-
-  int posicion;
-  int i=0;
-
-  posicion = hash(key,map->capacity);
-
-  if(strcmp(map->buckets[posicion]->key,key)==0){
-    map->buckets[posicion]->key = NULL;
-    map->size-=1;
-  }
-
-  while(i<map->capacity){
-    i++;
-    if(map->buckets[i]!=NULL){
-      if(strcmp(map->buckets[i]->key,key)==0){
-        map->buckets[i]->key = NULL;
-        map->size -=1;
-      }
+    //se revisa si el elemento existe
+    while(aux){
+        if(list->is_equal(aux->key,key)) return;
+        aux=aux->next;
     }
-  }
+
+    if(list->lower_than==NULL) {
+        _pushFront (list, key, value);
+        return;
+    }
+
+    aux= list->head;
+    //the minimum element
+    if (!aux || list->lower_than(key,aux->key)==1) {      
+        _pushFront (list, key, value);
+        return;
+    }
+
+
+    while(aux->next && list->lower_than(aux->next->key,key)==1)
+        aux=aux->next;
+    
+    list->current = aux;
+
+    Node* new = _createNode(key, value);
+
+    new->next = list->current->next;
+    new->prev = list->current;
+
+    if (list->current->next != NULL) {
+        list->current->next->prev = new;
+    }
+
+    list->current->next = new;
+
+    if (list->current == list->tail) {
+        list->tail = new;
+    }
 
 }
 
-void * searchMap(HashMap * map,  char * key) {   
+void * _popFront(Map * list) {
+    assert(list != NULL); // list no puede ser NULL.
 
-  int posicion;
+    if (list->head == NULL) return NULL;
 
-  posicion = hash(key,map->capacity);
-  int i=0;
+    Node * aux = list->head;
 
-  if(map->buckets[posicion] == NULL){ 
-    return NULL;
-  }
+    void * data = (void *)aux->data;
 
-  if(strcmp(map->buckets[posicion]->key,key) == 0){ 
-    map->current = posicion;
-    return map->buckets[posicion]->value;
-  }else{
+    if (list->head == list->tail) {
+        list->tail = list->head = NULL;
+    } else {
+        list->head = list->head->next;
+        list->head->prev = NULL;
+    }
 
-    while(i<map->capacity){
-      i++;
-      if(map->buckets[i] != NULL){
-        if(strcmp(map->buckets[i]->key,key) == 0){
-          map->current = i;
-          return map->buckets[i]->value;
+    free(aux);
+
+
+    return data;
+}
+
+void * _popBack(Map * list) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    if (list->head == NULL) return NULL;
+
+    Node * aux = list->tail;
+
+    void * data = (void *)aux->data;
+
+    if (list->tail == list->head) {
+        list->tail = list->head = NULL;
+    } else {
+        list->tail = list->tail->prev;
+        list->tail->next = NULL;
+    }
+
+    free(aux);
+
+
+    return data;
+}
+
+
+void* searchMap(Map * list, void * key) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    Node* aux= list->head;
+    //the minimum element
+    while (aux && list->is_equal(key,aux->key)==0) aux=aux->next;
+
+    list->current=aux;
+    if (list->head == NULL || list->current == NULL) return NULL;
+
+    return (void *) aux->data;
+}
+
+void * eraseMap(Map * list, void * key) {
+    assert(list != NULL); // list no puede ser NULL.
+
+    Node* aux= list->head;
+    while (aux && list->is_equal(key,aux->key)==0) aux=aux->next;
+
+    list->current=aux;
+    if (list->head == NULL || list->current == NULL) return NULL;
+
+    if (list->current == list->head) {
+        return _popFront(list);
+    } else if (list->current == list->tail) {
+        return _popBack(list);
+    } else {
+        if (aux->next != NULL) {
+            aux->next->prev = aux->prev;
         }
-      }
-    }
-  }
-return NULL;
-}
 
-void * firstMap(HashMap * map) {
-
-  int primero;
-  int i=0;
-
-    if(map->buckets[i] != NULL){
-      primero = i;
-    }else{
-      while(i<map->capacity){
-        i++;
-        if(map->buckets[i] != NULL){
-          return map->buckets[i]->value;
+        if (aux->prev != NULL) {
+            aux->prev->next = aux->next;
         }
-      }
     }
-    return map->buckets[primero]->value;
-}
 
-void * nextMap(HashMap * map) {
+    void * data = (void *)aux->data;
 
-    return NULL;
+    list->current = aux->next;
+
+    free(aux);
+
+    return data;
 }
