@@ -4,10 +4,10 @@
 ===
 
 ---
-Acdiel Bombin: 0
-Matias Gallardo: 0
-Sebastian Saavedra: 0
-Felix Lazcano: 0
+* Acdiel Bombin: 0 
+* Matias Gallardo: 0
+* Sebastian Saavedra: 0
+* Felix Lazcano: 0
 
 ---
 ![image](https://elcomercio.pe/resizer/0nSljC0qpzeZ8hI1ef91urLwvK8=/980x528/smart/filters:format(jpeg):quality(75)/arc-anglerfish-arc2-prod-elcomercio.s3.amazonaws.com/public/6OTCX6WE2BGJPCQJQYRACVEL24.jpg)
