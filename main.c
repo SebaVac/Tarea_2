@@ -6,45 +6,33 @@
 #include "hashmap.h"
 
 /*estructura de datos*/
-struct almacenamiento_pokemon *pokemochila;
-struct pokedex *Pokedex;
-
-typedef struct almacenamiento_pokemon{
+typedef struct Pokemon{
+  int id;
   int PC;
   int PS;
   char * nombre;
   char * sexo;
-}almacenamiento_pokemon;
-
-typedef struct PokemonMochila{//tipo de dato que se ingresa en el mapa
-  int id;
-  almacenamiento_pokemon * datos;
-}PokemonMochila;
+}Pokemon;
 
 typedef struct pokedex{
-  int id;
+  char* nombre;
   int cantidad;
   int numero_pokedex;
-  char * tipos;
+  char * tipo;
   char * evPrevia;
   char * evPosterior;
   char * region;
 }pokedex;
 
-typedef struct PokemonPokedex{ //tipo de dato que se ingresa en el mapa
-  int id;
-  int cantidad;
-  int numero_pokedex;
-  pokedex * datos;
-}PokemonPokedex;
-
 
 /*prototipos*/
 const char *get_csv_field();
 
-PokemonMochila* createAlmacenamiento(char* nombre,char* sexo, int id, int PC, int PS);
+Pokemon* crearPokemon(int id, char*nombre, int PC, int PS, char* sexo);
 
-PokemonPokedex* createPokedex(char* tipos,char* evPrevia,char* evPosterior,char* region, int numero_pokedex, int cantidad,int id);
+Pokemon* createAlmacenamiento(char* nombre,char* sexo, int id, int PC, int PS);
+
+pokedex* createPokedex(char* tipos,char* evPrevia,char* evPosterior,char* region, int numero_pokedex, int cantidad,int id);
 
 int is_equal_string(void * key1, void * key2);
 
@@ -55,12 +43,13 @@ int is_equal_int(void * key1, void * key2);
 int lower_than_int(void * key1, void * key2);
 
 
-int main(void) {
-
+int main() {
   //mapa con clave int para buscar pokemons con id
-    Map * almacenamiento_pokemon_id = createMap(is_equal_int);
-    Map* pokedex = createMap(is_equal_int);
-    Map* pokemochila = createMap(is_equal_int);
+    Map * almacenamiento_pokemon = createMap(is_equal_int);
+    Map* pokedex = createMap(is_equal_string);
+    setSortFunction(pokedex,lower_than_string);
+
+   // Map* pokemochila = createMap(is_equal_int);
 
   //mapa con clave string para buscar pokemons por nombre
     Map * almacenamiento_pokemon_nombre = createMap(is_equal_string);
@@ -69,24 +58,59 @@ int main(void) {
     pokedex = createMap(is_equal_string);
     setSortFunction(pokedex,lower_than_string);
 
-//-----------------------------------------------------------------------------------------------//
+    FILE *fp = fopen ("pokemonArchivo1.csv", "r");
 
-    PokemonMochila* mochila = createAlmacenamiento(mochila->datos->nombre,mochila->datos->sexo,mochila->id,mochila->datos->PC,mochila->datos->PS);
+    char linea[1024];
 
-    insertMap(almacenamiento_pokemon_nombre, mochila->datos->nombre, mochila->datos->sexo);
-    insertMap(almacenamiento_pokemon_id, &mochila->id, &mochila->datos);
+    fgets (linea, 1023, fp);
 
-//-----------------------------------------------------------------------------------------------//
-
-    PokemonPokedex * PokeDex = createPokedex(PokeDex->datos->tipos,PokeDex->datos->evPrevia,PokeDex->datos->evPosterior,PokeDex->datos->region,PokeDex->numero_pokedex,PokeDex->cantidad,PokeDex->id);
-
-    insertMap(almacenamiento_pokemon_nombre, PokeDex->datos->tipos, PokeDex->datos);
-    insertMap(almacenamiento_pokemon_id, &PokeDex->datos->id, &PokeDex->datos);
-    
-//------------------------------------------------------------------------------------------------//
   int p=0;
+
   int id,PC,PS,numeroPokedex,cantidad;
+
   char* nombre,*sexo,*tipos,*evPrevia,*evPosterior,*region;
+
+  Pokemon * Poke = NULL;
+  pokedex * DEX = NULL;
+
+  while (fgets(linea,1023,fp) != NULL){
+    id= (int) strtol(get_csv_field(linea,0), NULL,10);
+    nombre = (char*) get_csv_field(linea,1);
+    tipos = (char*) get_csv_field(linea,2);
+    PC = (int) strtol(get_csv_field(linea, 3), NULL, 10);
+    PS = (int) strtol(get_csv_field(linea, 4), NULL, 10);
+    sexo = (char*)get_csv_field(linea, 5);
+    evPrevia = (char*)get_csv_field(linea, 6);
+    evPosterior =(char*) get_csv_field(linea, 7);
+    numeroPokedex=(int) strtol(get_csv_field(linea, 8), NULL, 10);
+    region =(char*) get_csv_field(linea, 9);
+
+    Poke = create_pokemon(id,nombre,PC,PS,sexo);
+    PokemonPokedex = searchMap(pokedex, nombre);
+
+    if (PokemonPokedex == NULL){
+
+      PokemonPokedex= create_Pokedex(nombre,0,tipos,evPrevia,evPosterior,numeroPokedex,region);
+      insertMap(pokedex,PokemonPokedex->nombre,PokemonPokedex);
+      PokemonPokedex->cantidad = 1;
+
+    }else{ 
+    PokemonPokedex->cantidad++;
+    }
+
+    
+    if(contPokALmacenados <= 100){
+            insertMap(pokemonAlm,oPokemon->id,oPokemon);
+            contPokALmacenados++;
+        }
+
+
+
+  }
+
+
+
+
     int op;
     while(op!=0)
     {
@@ -115,6 +139,27 @@ int main(void) {
             break;*/
 
             case 2: 
+            id = (int) malloc(sizeof(id));
+            nombre = (char*) malloc(sizeof(nombre));
+            PC = (int) malloc(sizeof(PC));
+            PS = (int) malloc(sizeof(PS));
+            sexo = (char*) malloc(sizeof(sexo));
+            int cont;
+            tipos = ((char*) malloc(*tipos));
+            evPrevia = (char*) malloc(*evPrevia);
+            evPosterior = (char*) malloc(*evPosterior);
+            numeroPokedex = (int) malloc(numeroPokedex);
+            region = (char*) malloc(*region);
+
+            printf("2. Agregar un Pokemon al Almacenamiento \n");
+            
+            if(cont==100){
+
+                printf("El almacenamiento esta lleno. \n");
+                break;
+
+            }
+
               printf("Ingrese id del pokemon en la pokedex");//mochila
               scanf("%d", &id);
               printf("\n");
@@ -135,10 +180,6 @@ int main(void) {
               scanf("%s", sexo);
               printf("\n");
 
-              PokemonMochila * mochila = createAlmacenamiento(nombre,sexo,id,PC,PS);
-              insertMap(almacenamiento_pokemon_id, &mochila->id, mochila->datos);
-
-              if(searchMap(pokedex,&mochila->id) == NULL){
               printf("Ingrese tipo del pokemon(si el pokemon posee mas de un tipo, ingresar los tipos de la forma \"Tipo1-Tipo2\"): ");//Pokedex
               scanf("%s", tipos);
               printf("\n");
@@ -163,10 +204,10 @@ int main(void) {
               scanf("%i", &cantidad);
               printf("\n");
               
-              PokemonPokedex * PokeDex = createPokedex(tipos,evPrevia,evPosterior,region,numeroPokedex,cantidad,id);
-              insertMap(almacenamiento_pokemon_nombre, nombre, PokeDex->datos);
-
-              }
+              cont++;
+              
+              //printf("%s %s %i %i %s %s %s %i %s\n",nombre,tipo,pc,ps,sexo,evolPrev,evolPost,numPokedex,region);
+              
             break;
 
            // case 3: 
@@ -189,17 +230,17 @@ int main(void) {
                     printf("No existe el tipo\n");
                     }*/
                     
-            /*case 5: 
+            case 5: 
               printf("Ingresar nombre del pokemon: ");
               scanf("%s",nombre);
 
-              searchMap(almacenamiento_pokemon_nombre, nombre);
-              if(nombre){
-                printf("Nombre: %s\n",);
-                printf("Id: %i\n",);
-                printf("PC: %i\n",);
-                printf("PS: %i\n",);
-                printf("Sexo: %s\n",);
+              Pokemon* Busqueda = searchMap(almacenamiento_pokemon_nombre, nombre);
+              if(nombre != NULL){
+                printf("Nombre: %s\n",Poke->nombre);
+                printf("Id: %i\n",Poke->id);
+                printf("PC: %i\n",Poke->PC);
+                printf("PS: %i\n",Poke->PS);
+                printf("Sexo: %s\n",Poke->sexo);
               }else{
                 printf("No se han encontrado Pokemones con el nombre \"%s\"",nombre);
               }
@@ -209,22 +250,28 @@ int main(void) {
               printf("Ingresar nombre del pokemon: ");
               scanf("%s",nombre);
 
-              Pokedex* Busqueda = searchMap(pokedex, nombre);
+              pokedex * Busqueda = searchMap(pokedex, nombre);
               if(nombre){
-                printf("Nombre: %s",busqueda->nombre);
+                printf("Nombre: %s",Busqueda->nombre);
               }
             break;
 
             case 7: 
+
+              mostrarPokedex(pokedex);
+
             break;
 
             case 8: 
+              mostrarMochila(almacenamiento_pokemon);
             break;
+
             case 9: 
+              
             break;
 
             case 10: 
-            break;*/
+            break;
         }
     }
 
@@ -301,26 +348,82 @@ int lower_than_int(void * key1, void * key2) {
     return 0;
 }
 
+Pokemon* crearPokemon(int id,char* nombre,int PC, int PS, char* sexo){
 
-PokemonMochila* createAlmacenamiento(char* nombre,char* sexo, int id, int PC, int PS){
-    PokemonMochila* b = (PokemonMochila*) malloc (sizeof(PokemonMochila));
-    strcpy(b->datos->nombre,nombre);
-    strcpy(b->datos->sexo,sexo);
-    b->id= id; 
-    b->datos->PC = PC;
-    b->datos->PS = PS;
-    return b;
+  Pokemon* Pokemochila = (Pokemon*)malloc(sizeof(Pokemon));
+
+  Pokemochila->id = id;
+  Pokemochila->nombre = nombre;
+  Pokemochila->PC = PC;
+  Pokemochila->PS = PS;
+  Pokemochila->sexo = sexo;
+
+  return Pokemochila;
 }
 
+pokedex* crearPokedex(char* nombre, int cantidad, char* tipo, char* evPrevia, char* evPosterior, int numero_pokedex, char* region){
 
-PokemonPokedex* createPokedex(char* tipos,char* evPrevia,char* evPosterior,char* region, int numero_pokedex, int cantidad,int id){
-    PokemonPokedex* p = (PokemonPokedex*) malloc (sizeof(PokemonPokedex));
-    strcpy(p->datos->tipos,tipos);
-    strcpy(p->datos->evPrevia,evPrevia);
-    strcpy(p->datos->evPosterior,evPosterior);
-    strcpy(p->datos->region,region);
-    p->numero_pokedex=numero_pokedex; 
-    p->cantidad=cantidad; 
-    p->id=id; 
-    return p;
+  pokedex* dex =(pokedex*)malloc(sizeof(pokedex));
+  
+  dex->nombre = nombre;
+  dex->cantidad = cantidad;
+  dex->tipo = tipo,
+  dex->evPrevia = evPrevia;
+  dex->evPosterior = evPosterior;
+  dex->numero_pokedex = numero_pokedex;
+  dex->region = region;
+
+  return dex;
+
+}
+
+void mostrarMochila(Map* map){
+
+  Pokemon* Pokemochila = (Pokemon*)malloc(sizeof(Pokemon));
+  Pokemochila = firstMap(map);
+
+  int i=1;
+  while(Pokemochila != NULL){
+    printf("------------------------%i-------------------------",i);
+  }
+
+  printf("%i\n",Pokemochila->id);
+  printf("%s\n",Pokemochila->nombre);
+  printf("%i\n",Pokemochila->PC);
+  printf("%i\n",Pokemochila->PS);
+  printf("%s\n\n",Pokemochila->sexo);
+
+  i++;
+  Pokemochila = nextMap(map);
+}
+
+void mostrarPokedex(Map* map){
+
+  pokedex * dex = (pokedex*)malloc(sizeof(pokedex));
+
+  dex = firstMap(map);
+
+  int i=0;
+  while(dex != NULL){
+    printf("------------------------%i-------------------------",i);
+
+    printf("%s\n",dex->nombre);
+    printf("%i\n",dex->cantidad);
+    printf("%s\n",dex->evPrevia);
+    printf("%s\n",dex->evPosterior);
+    printf("%i\n",dex->numero_pokedex);
+    printf("%s\n\n",dex->region);
+    i++;
+
+    dex = nextMap(map);
+  }
+
+}
+
+void borrarPoke(Map *map,int id){
+
+  Pokemon* Busqueda = searchMap(map, id);
+  
+  Busqueda = NULL;
+
 }
