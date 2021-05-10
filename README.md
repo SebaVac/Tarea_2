@@ -20,3 +20,6 @@ Al comienzo de la tarea teniamos planeado utilizar los TDAs conocidos en clase y
 
 Estamos muy arrepentidos por nuestra actuación en esta tarea profesor, espero que nos disculpe y vamos a mejorar mucho para en la proxima sacarnos un 7.0. Se que el camino no es facil para sacar esta carrera pero daremos todo el potencial posible para terminarla espero su compresion. De ante mano muchas gracias.🙏🥺🙏👉👈.
 
+[Play musica sad](https://www.youtube.com/watch?v=sleyC9Lqd48)
+
+Lamentablemente no pudimos concluir con lo acordado en esta tarea, ya que no pudimos implementar nuestros conocimientos aprendidos en clase para porder compilar en ella. Creemos que nuestros errores son principalmente por falta de practica haciendo ejercicios y falta de conocimiento.
